@@ -1,0 +1,28 @@
+services:
+  ticktracker.api:
+    image: ${DOCKER_REGISTRY-}ticktrackerapi
+    container_name: ticktracker.api
+    build:
+      context: .
+      dockerfile: TickTracker.Api/Dockerfile
+    ports:
+      - "5000:5000"
+      - "5001:5001" 
+
+  ticktracker.database:
+    image: postgres:latest
+    container_name: ticktracker.database
+    environment: 
+      - POSTGRES_DB=ticktracker
+      - POSTGRES_USER=ticktracker
+      - POSTGRES_PASSWORD=ticktracker
+    volumes:
+      - ./.containers/ticktracker-db:/var/lib/postgresql/data
+    ports:
+      - 5433:5432
+
+  ticktracker.cache:
+    image: redis:latest
+    restart: always
+    ports:
+      - 6379:6379 
