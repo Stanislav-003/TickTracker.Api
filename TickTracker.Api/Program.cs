@@ -1,12 +1,10 @@
 using Carter;
 using Mapster;
 using Microsoft.EntityFrameworkCore;
-using TickTracker.Api.Abstractions;
 using TickTracker.Api.Configurations;
 using TickTracker.Api.Database;
 using TickTracker.Api.DependencyInjection;
 using TickTracker.Api.Extensions;
-using TickTracker.Api.Services;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -33,6 +31,8 @@ builder.Services.AddSingleton(TypeAdapterConfig.GlobalSettings);
 builder.Services.AddScoped<MapsterMapper.IMapper, MapsterMapper.ServiceMapper>();
 
 var app = builder.Build();
+
+app.UseCustomExceptionHandler();
 
 if (app.Environment.IsDevelopment())
 {

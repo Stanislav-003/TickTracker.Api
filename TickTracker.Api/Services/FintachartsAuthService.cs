@@ -1,6 +1,5 @@
 ﻿using Microsoft.Extensions.Options;
 using TickTracker.Api.Abstractions;
-using TickTracker.Api.Contracts;
 using TickTracker.Api.DTOs;
 using TickTracker.Api.Options;
 

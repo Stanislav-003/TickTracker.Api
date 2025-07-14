@@ -3,6 +3,7 @@ using MapsterMapper;
 using MediatR;
 using System.Diagnostics.Metrics;
 using System.Net.WebSockets;
+using TickTracker.Api.Abstractions;
 using TickTracker.Api.Contracts;
 using TickTracker.Api.Services;
 
@@ -35,33 +36,15 @@ public static class GetPrices
                 throw new ArgumentException("InstrumentId is required");
             }
 
-            await _fintachartsWebSocketService.WaitForConnectionAsync(TimeSpan.FromSeconds(5), cancellationToken);
             await _fintachartsWebSocketService.SendSubscriptionMessage(cancellationToken, request.InstrumentId);
 
-            InstrumentPrice priceData;
+            await Task.Delay(400);
 
-            try
-            {
-                priceData = await _priceService.WaitForPriceAsync(request.InstrumentId, TimeSpan.FromSeconds(3));
-            }
-            catch (TaskCanceledException)
-            {
-                return new InstrumentPrice
-                {
-                    type = "Price timeout",
-                    instrumentId = request.InstrumentId
-                };
-            }
+            var priceData = _priceService.GetPriceById(request.InstrumentId);
 
             if (priceData == null)
             {
-                return new InstrumentPrice
-                {
-                    type = "Price is unavailable",
-                    instrumentId = request.InstrumentId,
-                    provider = null,
-                    last = null,
-                };
+                throw new InvalidOperationException($"Price for instrument '{request.InstrumentId}' is unavailable or timed out.");
             }
 
             return priceData;

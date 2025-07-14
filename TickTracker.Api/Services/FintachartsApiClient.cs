@@ -1,11 +1,8 @@
 ﻿using Microsoft.Extensions.Options;
-using System.Diagnostics.Metrics;
 using System.Net.Http.Headers;
 using TickTracker.Api.Abstractions;
-using TickTracker.Api.Contracts;
 using TickTracker.Api.DTOs;
 using TickTracker.Api.Options;
-using static System.Net.WebRequestMethods;
 
 namespace TickTracker.Api.Services;
 

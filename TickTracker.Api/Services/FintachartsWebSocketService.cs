@@ -6,6 +6,8 @@ using TickTracker.Api.Options;
 using TickTracker.Api.Abstractions;
 using TickTracker.Api.Contracts;
 using TickTracker.Api.DTOs;
+using System.Collections.Generic;
+using System.Threading.Tasks;
 
 namespace TickTracker.Api.Services;
 
@@ -167,75 +169,53 @@ public class FintachartsWebSocketService : BackgroundService
         {
             var fintaMessage = JsonSerializer.Deserialize<FintachartsWsPriceMessageDto>(message);
 
-            if (fintaMessage == null)
+            if (fintaMessage is null)
             {
                 _logger.LogWarning("Received malformed or incomplete WebSocket message: {Message}", message);
                 return;
             }
 
-            if (fintaMessage != null)
-            {
-                var instrumentPrice = new InstrumentPrice
-                {
-                    type = fintaMessage.type,
-                    instrumentId = fintaMessage.instrumentId,
-                    provider = fintaMessage.provider
-                };
+            var last = fintaMessage.last is null 
+                ? null 
+                : new LastPrice(
+                    fintaMessage.last.timestamp,
+                    fintaMessage.last.price,
+                    fintaMessage.last.volume,
+                    fintaMessage.last.change,
+                    fintaMessage.last.changePct);
 
-                if (fintaMessage.last != null)
-                {
-                    instrumentPrice.last = new LastPrice
-                    {
-                        timestamp = fintaMessage.last.timestamp,
-                        price = fintaMessage.last.price,
-                        volume = fintaMessage.last.volume,
-                        change = fintaMessage.last.change,
-                        changePct = fintaMessage.last.changePct
-                    };
-                }
+            var bid = fintaMessage.bid is null
+                ? null
+                : new LastPrice(
+                    fintaMessage.bid.timestamp,
+                    fintaMessage.bid.price,
+                    fintaMessage.bid.volume,
+                    fintaMessage.bid.change,
+                    fintaMessage.bid.changePct);
 
-                if (fintaMessage.bid != null)
-                {
-                    instrumentPrice.bid = new LastPrice
-                    {
-                        timestamp = fintaMessage.bid.timestamp,
-                        price = fintaMessage.bid.price,
-                        volume = fintaMessage.bid.volume,
-                        change = fintaMessage.bid.change,
-                        changePct = fintaMessage.bid.changePct
-                    };
-                }
+            var ask = fintaMessage.ask is null
+                ? null
+                : new LastPrice(
+                    fintaMessage.ask.timestamp,
+                    fintaMessage.ask.price,
+                    fintaMessage.ask.volume,
+                    fintaMessage.ask.change,
+                    fintaMessage.ask.changePct);
 
-                if (fintaMessage.ask != null)
-                {
-                    instrumentPrice.ask = new LastPrice
-                    {
-                        timestamp = fintaMessage.ask.timestamp,
-                        price = fintaMessage.ask.price,
-                        volume = fintaMessage.ask.volume,
-                        change = fintaMessage.ask.change,
-                        changePct = fintaMessage.ask.changePct
-                    };
-                }
+            var instrumentPrice = new InstrumentPrice(
+                fintaMessage.type,
+                fintaMessage.instrumentId,
+                fintaMessage.provider,
+                last,
+                bid,
+                ask);
 
-                _priceService.UpdatePrice(instrumentPrice);
-                _logger.LogDebug("Updated price for instrument {InstrumentId}", instrumentPrice.instrumentId);
-            }
+            _priceService.UpdatePrice(instrumentPrice);
+            _logger.LogDebug("Updated price for instrument {InstrumentId}", instrumentPrice.instrumentId);
         }
         catch (Exception ex)
         {
             _logger.LogError(ex, "Failed to process received WebSocket message: {Message}", message);
         }
-    }
-
-    public async Task WaitForConnectionAsync(TimeSpan timeout, CancellationToken ct)
-    {
-        var start = DateTime.UtcNow;
-        
-        while (_webSocket?.State != WebSocketState.Open && DateTime.UtcNow - start < timeout)
-            await Task.Delay(50, ct);
-
-        if (_webSocket?.State != WebSocketState.Open)
-            throw new InvalidOperationException("WebSocket is not connected.");
     }
 }
