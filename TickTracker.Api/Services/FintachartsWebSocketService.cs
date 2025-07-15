@@ -43,11 +43,12 @@ public class FintachartsWebSocketService : BackgroundService
             try
             {
                 await ConnectAndSubscribe(stoppingToken);
+                await Task.Delay(TimeSpan.FromSeconds(2), stoppingToken);
             }
             catch (Exception ex)
             {
-                _logger.LogError(ex, "Error in WebSocket loop. Retrying in 5 seconds...");
-                await Task.Delay(TimeSpan.FromSeconds(5), stoppingToken);
+                _logger.LogError(ex, "Error in WebSocket loop. Retrying in 2 seconds...");
+                await Task.Delay(TimeSpan.FromSeconds(2), stoppingToken);
             }
         }
 
@@ -78,7 +79,7 @@ public class FintachartsWebSocketService : BackgroundService
         {
             await _webSocket.ConnectAsync(uri, cancellationToken);
 
-            await SendSubscriptionMessage(cancellationToken);
+            //await SendSubscriptionMessage(cancellationToken);
 
             await ListenForMessages(cancellationToken);
         }
@@ -94,6 +95,7 @@ public class FintachartsWebSocketService : BackgroundService
                 _logger.LogInformation("WebSocket connection closed.");
             }
 
+            _logger.LogInformation("WebSocket connection successfully Disposed.");
             _webSocket?.Dispose();
         }
     }
@@ -169,9 +171,8 @@ public class FintachartsWebSocketService : BackgroundService
         {
             var fintaMessage = JsonSerializer.Deserialize<FintachartsWsPriceMessageDto>(message);
 
-            if (fintaMessage is null)
+            if (fintaMessage is null || string.IsNullOrWhiteSpace(fintaMessage.instrumentId))
             {
-                _logger.LogWarning("Received malformed or incomplete WebSocket message: {Message}", message);
                 return;
             }
 
@@ -211,7 +212,6 @@ public class FintachartsWebSocketService : BackgroundService
                 ask);
 
             _priceService.UpdatePrice(instrumentPrice);
-            _logger.LogDebug("Updated price for instrument {InstrumentId}", instrumentPrice.instrumentId);
         }
         catch (Exception ex)
         {

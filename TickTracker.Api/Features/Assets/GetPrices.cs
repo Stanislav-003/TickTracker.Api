@@ -38,7 +38,7 @@ public static class GetPrices
 
             await _fintachartsWebSocketService.SendSubscriptionMessage(cancellationToken, request.InstrumentId);
 
-            await Task.Delay(400);
+            await Task.Delay(1000);
 
             var priceData = _priceService.GetPriceById(request.InstrumentId);
 
