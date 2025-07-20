@@ -137,29 +137,24 @@ public class FintachartsWebSocketService : BackgroundService
 
         while (_webSocket.State == WebSocketState.Open && !cancellationToken.IsCancellationRequested)
         {
-            try
+            var result = await _webSocket.ReceiveAsync(new ArraySegment<byte>(buffer), cancellationToken);
+
+            if (result.MessageType == WebSocketMessageType.Text)
             {
-                var result = await _webSocket.ReceiveAsync(new ArraySegment<byte>(buffer), cancellationToken);
+                var message = Encoding.UTF8.GetString(buffer, 0, result.Count);
 
-                if (result.MessageType == WebSocketMessageType.Text)
+                try
                 {
-                    var message = Encoding.UTF8.GetString(buffer, 0, result.Count);
-
                     ProcessReceivedMessage(message);
                 }
-                else if (result.MessageType == WebSocketMessageType.Close)
+                catch (Exception ex)
                 {
-                    _logger.LogWarning("WebSocket close message received.");
+                    _logger.LogWarning(ex, "Skip bad packet");
                 }
             }
-            catch (OperationCanceledException ex)
+            else if (result.MessageType == WebSocketMessageType.Close)
             {
-                _logger.LogInformation(ex, "Listening cancelled.");
-                break;
-            }
-            catch (Exception ex)
-            {
-                _logger.LogError(ex, "Error while receiving WebSocket message.");
+                _logger.LogWarning("WebSocket close message received.");
                 break;
             }
         }

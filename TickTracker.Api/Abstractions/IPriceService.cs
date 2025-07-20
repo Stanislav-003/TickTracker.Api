@@ -5,5 +5,5 @@ namespace TickTracker.Api.Abstractions;
 public interface IPriceService
 {
     void UpdatePrice(InstrumentPrice priceData);
-    InstrumentPrice GetPriceById(string instrumentId);
+    InstrumentPrice? GetPriceById(string instrumentId);
 }

@@ -31,12 +31,12 @@ public class PriceService : IPriceService
             var newPriceList = new List<InstrumentPrice>();
             
             newPriceList.Add(priceData);
-            
+
             _pricesHistory[instrumentId] = newPriceList;
         }
     }
 
-    public InstrumentPrice GetPriceById(string instrumentId)
+    public InstrumentPrice? GetPriceById(string instrumentId)
     {
         if (_pricesHistory.TryGetValue(instrumentId, out var priceHistory))
         {
