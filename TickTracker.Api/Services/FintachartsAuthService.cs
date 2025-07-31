@@ -35,7 +35,7 @@ public class FintachartsAuthService : IFintachartsAuthService
         
         var response = await _httpClient.PostAsync(url, content, ct);
 
-        var test = response.Content.ReadAsStringAsync(ct);
+        //var test = response.Content.ReadAsStringAsync(ct);
 
         response.EnsureSuccessStatusCode();
 
